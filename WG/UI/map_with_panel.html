@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Wave Glider Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #main { display: flex; height: 100vh; width: 100vw; }
+    #map { flex: 1; }
+    #info { width: 300px; padding: 10px; background: #f4f4f4; border-left: 1px solid #ccc; font-family: Arial; }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
+  <script>
+    function sendClickToPython(lat, lon) {
+      if (window.pywebview) {
+        window.pywebview.api.send_coords(lat, lon);
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="main">
+    <div id="map">
+      <iframe src="map_base.html"></iframe>
+    </div>
+    <div id="info">
+      <h3>資訊面板</h3>
+      <p id="latlon">點擊地圖查看座標</p>
+    </div>
+  </div>
+  
+  <script>
+    setInterval(() => {
+      const iframe = document.querySelector('iframe');
+      iframe.src = iframe.src.split('?')[0] + '?t=' + new Date().getTime();  // 加時間參數避免 cache
+    }, 2000);  // 每 2 秒刷新
+  </script>
+  
+</body>
+</html>

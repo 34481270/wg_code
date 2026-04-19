@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>PID 參數調整與即時繪圖</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    fieldset { margin-bottom: 16px; }
+    label { display: block; margin: 4px 0; }
+    input[type="number"] { width: 80px; }
+    button { padding: 6px 12px; }
+
+    #chart-container {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 24px;
+      height: 350px;     
+      border: 1px solid #ccc;
+    }
+
+    #pidChart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+
+  <script src="./node_modules/chart.js/dist/chart.umd.js"></script>
+</head>
+<body>
+    
+  <form id="pid-form">
+    <button type="button" onclick="pidTestStart()">開始測試</button>
+    <button type="button" onclick="pidTestFinish()">結束測試</button>
+
+    <fieldset style="margin-top: 16px;">
+      <legend>參數調整</legend>
+      <label>航速:
+        <input type="number" id="wg_speed" step="0.1" placeholder="0.0" value="0.0" style="width: 80px;">
+        &nbsp;m/s
+     <label>舵角:
+         <input type="number" id="rudder_angle" step="0.1" placeholder="0.0" value="0.0" style="width: 80px;">
+         &nbsp;度
+     <label>航向:
+         <input type="number" id="target_angle" step="0.1" placeholder="0.0" value="0.0" style="width: 80px;">
+         &nbsp;度
+         <label>轉彎半徑:
+      <input type="number" id="turn_radius" step="0.1" placeholder="0.0" value="0.0" style="width: 80px;">
+      &nbsp;m
+    
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>選擇類型</legend>
+      <label><input type="radio" name="component" value="general"> 通用設定  （只會設定航速 ＆ 舵角）</label>
+      <label><input type="radio" name="component" value="propeller" checked> Propeller（更新PID參數、目標航速）</label>
+      <label><input type="radio" name="component" value="rudder"> Rudder   （更新PID參數、航向）</label>
+      <label><input type="radio" name="component" value="action"> 執行 </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>參數輸入</legend>
+      <label>Kp: <input type="number" step="0.01" id="kp" value="0.00"></label>
+      <label>Ki: <input type="number" step="0.01" id="ki" value="0.00"></label>
+      <label>Kd: <input type="number" step="0.01" id="kd" value="0.00"></label>
+    </fieldset>
+
+  </form>
+
+  <div id="chart-container">
+    <canvas id="pidChart"></canvas>
+  </div>
+
+  <script>
+    let pidChart = null;  
+    let pidChartData = {
+      labels: [],  
+      datasets: [
+        {
+          label: '目標航向角 (Setpoint)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          fill: false,
+          data: [],  
+          pointRadius: 0,
+          tension: 0.1
+        },
+        {
+          label: '實際回應角度 (Response)',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+          fill: false,
+          data: [],
+          pointRadius: 0,
+          tension: 0.1
+        }
+      ]
+    };
+
+    let currentTarget = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const ctx = document.getElementById('pidChart').getContext('2d');
+      pidChart = new Chart(ctx, {
+        type: 'line',
+        data: pidChartData,
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: '資料數'
+              }
+            },
+            y: {
+              title: {
+                type: 'linear',  
+                display: true,
+                text: '角度 (deg) , 航速 (m/s)',
+              },
+                grace: '25%'
+            }
+          },
+          plugins: {
+            legend: {
+              display: true
+            }
+          }
+        }
+      });
+    });
+
+    function course_angle(data) {
+
+      const resp = parseFloat(data);
+
+      const nextIndex = pidChartData.labels.length;
+      pidChartData.labels.push(nextIndex);
+
+      pidChartData.datasets[0].data.push(currentTarget);
+
+      pidChartData.datasets[1].data.push(resp);
+
+      pidChart.update();
+    }
+
+    function pidTestStart() {
+        const comp = document.querySelector('input[name=component]:checked').value;
+        const kp   = parseFloat(document.getElementById('kp').value);
+        const ki   = parseFloat(document.getElementById('ki').value);
+        const kd   = parseFloat(document.getElementById('kd').value);
+        const speed = parseFloat(document.getElementById('wg_speed').value);
+        const rudder = parseFloat(document.getElementById('rudder_angle').value);
+        const target_angle = parseFloat(document.getElementById('target_angle').value);
+        const turn_radius = parseFloat(document.getElementById('turn_radius').value);
+  
+        if (pidChart) {
+          pidChartData.labels = [];
+          pidChartData.datasets[0].data = [];
+          pidChartData.datasets[1].data = [];
+          pidChart.update();
+          alert(`清空資料`);
+        }
+        currentTarget = target_angle;
+  
+        const pid_cmd = [comp, kp, ki, kd, speed, rudder, target_angle, turn_radius];
+        const payload = { data: pid_cmd };
+        const json = JSON.stringify(payload);
+        const msg = `$pid@${json}*\n`;
+
+  
+        window.pywebview.api.send_cmd(msg).then(success => {
+          if (success) {
+            alert(`✅ 已送出：\n${msg}`);
+          } else {
+            alert('❌ 送出失敗，請確認後端是否已連線');
+          }
+        });
+      }
+
+    function pidTestFinish() {
+      const cmd = 'pidTestFinish';
+      const jsonData = JSON.stringify({ data: 1 });
+      const message = `$${cmd}@${jsonData}*\n`;
+      window.pywebview.api.send_cmd(message).then(success => {
+        if (success) {
+          alert(`✅ 已送出：\n${message}`);
+        } else {
+          alert('❌ 送出失敗，請確認後端是否已連線');
+        }
+      });
+    }document.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.getElementById('pidChart').getContext('2d');
+  pidChart = new Chart(ctx, {
+    // 原本的 chart 設定
+  });
+
+  // ✅ 通知 Python：我準備好了
+  if (window.pywebview) {
+    pywebview.api.open_pid_ready();
+  }
+});
+
+
+  </script>
+</body>
+</html>

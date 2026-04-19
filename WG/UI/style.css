@@ -1,0 +1,133 @@
+/* 全域重置 */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* 頂部 Header */
+#header {
+  background-color: #222;
+  color: white;
+  font-size: 1.1em;
+  font-family: Arial, sans-serif;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+/* 主區塊：地圖 + 側邊 */
+#main {
+  display: flex;
+  height: calc(100vh - 40px);
+  width: 100vw;
+}
+
+/* 地圖區 */
+#map {
+  flex: 3;
+  height: 100%;
+}
+
+/* 側邊面板 */
+#info {
+  flex: 1;
+  padding: 16px;
+  background: #f4f4f4;
+  border-left: 1px solid #ccc;
+  font-family: Arial, sans-serif;
+  overflow-y: auto;
+}
+
+/* 連線指示燈 */
+.indicator {
+  display: inline-block;
+  vertical-align: middle;
+  width: 20px;
+  height: 20px;
+  margin-right: 35px;
+  border-radius: 50%;
+  background-color: gray;
+  border: 2px solid #ccc;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+/* .indicator.connected {
+  background-color: rgba(5, 255, 5, 0.9);
+  box-shadow:
+    0 0 6px rgba(0, 255, 0, 0.5),
+    0 0 3px rgba(0, 255, 0, 0.3);
+} */
+/* Socket 連線：綠燈 */
+#socket-indicator.connected {
+  background-color: rgba(5, 255, 5, 0.9);
+  box-shadow:
+    0 0 6px rgba(0, 255, 0, 0.5),
+    0 0 3px rgba(0, 255, 0, 0.3);
+}
+
+/* 導航中：藍燈 */
+#nav-indicator.connected {
+  background-color: rgba(5, 255, 5, 0.9);
+  box-shadow:
+    0 0 6px rgba(0, 255, 0, 0.5),
+    0 0 3px rgba(0, 255, 0, 0.3);
+}
+
+/* Propeller 啟動：橘燈 */
+#prop-indicator.connected {
+  background-color: rgba(5, 255, 5, 0.9);
+  box-shadow:
+    0 0 6px rgba(0, 255, 0, 0.5),
+    0 0 3px rgba(0, 255, 0, 0.3);
+}
+
+/* 按鈕群組 */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.button-group button {
+  flex: 1 1 45%;
+  padding: 8px;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+/* 測量值面板 */
+#statsPanel {
+  margin-top: 24px;
+}
+#statsPanel dl {
+  margin: 0;
+  padding: 0;
+}
+#statsPanel dt {
+  float: left;
+  font-weight: bold;
+  width: 60px;
+}
+#statsPanel dd {
+  margin: 0 0 8px 68px;
+  padding: 0;
+}
+
+/* 狀態歷史可滾動 */
+.scrollable {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 8px;
+  font-size: 0.9em;
+}
+
+/* 一般按鈕 */
+button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  font-family: Arial, sans-serif;
+}

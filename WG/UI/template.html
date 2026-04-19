@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <meta charset="utf-8" />
+    <title>Wave Glider 控制介面</title>
+    
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <!-- 樣式 -->
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+  
+    <!-- 必要的 JS：照這個順序 -->
+    <script src="js/idb.min.js"></script>
+    <script src="js/localforage.min.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/leaflet.offline.js"></script>
+    <script src="jsHTML.js"></script>    
+    <script src="js/leaflet.rotatedMarker.js"></script>
+    
+  </head>
+  
+<body>
+  
+    <header id="header">
+        <h1> Wave Glider 控制介面</h1>
+    </header>      
+  <div id="main">
+    <div id="map"></div>
+    <div id="info">
+      <div style="text-align: center;">
+        <div id="batteryBarContainer" style="margin-top: 8px; width: 120px; height: 12px; background-color: #ddd; border-radius: 10px; overflow: hidden; display: inline-block; position: relative;">
+          <div id="batteryBar" style="height: 100%; background-color: green; position: absolute; right: 0; top: 0;"></div>
+        </div>
+        <div style="font-size: 12px; margin-top: 4px;">
+          電壓：<span id="batteryVoltageText">--</span> V
+        </div>
+      </div>
+      <p>
+        連線  <span id="socket-indicator" class="indicator"></span>  
+        導航  <span id="nav-indicator"    class="indicator"></span>  
+        螺槳 <span id="prop-indicator"   class="indicator"></span>  
+      </p>
+      <div id="headingDisplay" style="margin-top: 16px; text-align: center;">
+        <div style="font-weight: bold;">航向</div>
+        <div style="width: 60px; height: 60px; margin: 10px auto; position: relative;">
+          <svg viewBox="0 0 100 100" width="60" height="60">
+            <circle cx="50" cy="50" r="48" stroke="#999" stroke-width="2" fill="none"/>
+      
+            <g id="arrow-group" transform="rotate(0, 50, 50)">
+              <polygon points="50,10 55,35 50,30 45,35" fill="red"/>
+            </g>
+      
+            <g id="target_arrow_group" transform="rotate(0, 50, 50)">
+              <polygon points="50,10 55,35 50,30 45,35" fill="blue" opacity="0.6"/>
+            </g>
+          </svg>
+        </div>
+          <div style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 8px;">
+            <div>航向(紅)：<span id="courseValue">0°</span></div>
+            <div>期望航向(藍)：<span id="excpetcourseValue">0°</span></div>
+          </div>
+
+        <div style="margin-top: 16px; text-align: center;">
+          <div style="font-weight: bold;">舵角</div>
+          <div style="width: 60px; height: 60px; margin: 10px auto; position: relative;">
+            <svg viewBox="0 0 100 100" width="60" height="60">
+              <circle cx="50" cy="50" r="48" stroke="#999" stroke-width="2" fill="none"/>
+              <polygon points="48,12 52,12 56,20  56,50 54,58 46,58 44,50 44,20" fill="#CC8400" opacity="0.8"/>
+              <g id="rudder_arrow_group" transform="rotate(0, 50, 50)">
+                <polygon points="50,10 55,35 50,30 45,35" fill="#CC8400"/>
+              </g>
+            </svg>
+          </div>
+          <div style="font-size: 16px; margin-top: 8px;">
+            舵角 <span id="rudderAngleValue">0°</span>
+          </div>
+        </div>
+      </div>
+      
+      
+
+      <p id="latlon">距離：</p>
+      <div id="button-container">
+        <button onclick="zoomToCurrent()">縮放至目前位置</button>
+        <button onclick="clearPolylines()">清空規劃路徑</button>
+        <button onclick="clearTrajectory()">清空WG路徑</button>
+        <button onclick="enableTargetSelection()">啟用選點</button>
+        <button onclick="confirmTarget()">設定目標點</button>
+        <button onclick="experimentStart()">實驗開始</button>     
+        <button onclick="experimentFinish()">實驗結束</button> 
+        <button id="pid-config-btn">PID 參數設定</button>
+  
+        
+        <!-- 新增測量 & 狀態面板 -->
+  <div id="statsPanel">
+    <div>船速: <span id="wgSpeed">--</span> m/s</div>
+    <div>流速: <span id="flowSpeed">--</span> m/s</div>
+    <div>流向: <span id="flowDir">--</span>°</div>
+    <h3>狀態歷史</h3>
+    <div id="stateHistory" class="scrollable"></div>
+  </div>
+      </div> 
+    </div>
+  </div>
+</body>
+</html>

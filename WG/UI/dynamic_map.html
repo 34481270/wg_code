@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Dynamic Glider Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="header">
+        <h1>🌊 Wave Glider 控制介面</h1>
+    </header>      
+  <div id="main">
+    <div id="map"></div>
+    <div id="info">
+      <h3>資訊面板</h3>
+      <p id="latlon">座標將顯示於此</p>
+      <button onclick="zoomToCurrent()">縮放至目前位置</button>
+    </div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map').setView([25.15, 121.75], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    map.on('click', function (e) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+      
+        // 顯示小點 marker
+        L.circleMarker([lat, lon], {
+          radius: 5,
+          color: 'red',
+          fillColor: 'red',
+          fillOpacity: 1
+        }).addTo(map)
+      
+        // 傳回 Python
+        if (window.pywebview && window.pywebview.api) {
+          window.pywebview.api.send_click_position(lat, lon);
+        }
+      });
+      
+      
+
+    var trajectory = [];
+    var polyline = L.polyline(trajectory, {color: 'red'}).addTo(map);
+    var marker = null;
+    var lastLatLng = null;
+
+    function addPoint(lat, lon) {
+      var newLatLng = L.latLng(lat, lon);
+      trajectory.push(newLatLng);
+      polyline.setLatLngs(trajectory);
+      if (marker) map.removeLayer(marker);
+      marker = L.marker(newLatLng).addTo(map);
+      lastLatLng = newLatLng;
+      document.getElementById('latlon').innerText = `目前位置：Lat ${lat.toFixed(6)}, Lon ${lon.toFixed(6)}`;
+    }
+    
+
+    function zoomToCurrent() {
+      if (lastLatLng) {
+        map.setView(lastLatLng, 16);
+      }
+    }
+  </script>
+</body>
+</html>
