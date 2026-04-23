@@ -1178,7 +1178,7 @@ def main():
             
             
             if path_version > last_path_sent_version:
-                sender.sendQueue.put(("drawTrajectory", list(shared['current_path'])))
+                sender.sendQueue.put(("drawSimulate", list(shared['current_path'])))
                 shared['last_path_sent_version'].value += 1     
 
             time.sleep(0.5)

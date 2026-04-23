@@ -29,17 +29,17 @@ print(f"✅ 動態地圖已建立：{os.path.abspath('dynamic_map.html')}\n等�
 # === API 提供給 JS 呼叫的函式 ===
 class API:
     def __init__(self):
-        self.socket_conn = None
-        self.queue = Queue()  # ✅ 新增 queue 儲存所有資料
-        self.pid_window = None
+        self._socket_conn = None
+        self._queue = Queue()  # ✅ 新增 queue 儲存所有資料
+        self._pid_window = None
         
         self.js_buffer = []
         self.ui_ready = False    
 
     def check_socket(self):
         try:
-            if self.socket_conn:
-                self.socket_conn.sendall(b"ping\n")
+            if self._socket_conn:
+                self._socket_conn.sendall(b"ping\n")
                 return True
             else:
                 return False
@@ -49,9 +49,9 @@ class API:
     def send_cmd(self, cmd):
         print('送出命令', cmd)
         try:
-            if self.socket_conn:
+            if self._socket_conn:
                 print('送出命令', cmd)
-                self.socket_conn.sendall(cmd.encode())
+                self._socket_conn.sendall(cmd.encode())
                 return True
             else:
                 return False
@@ -67,7 +67,7 @@ class API:
             width=800,
             height=1600
         )
-        self.pid_window = pid_window
+        self._pid_window = pid_window
 
 
 # === Socket Server：接收資料、存進 queue ===
@@ -85,7 +85,7 @@ def start_socket_server(window):
             try:
                 conn, addr = server.accept()
                 print(f"✅ Connected by {addr}")
-                api.socket_conn = conn
+                api._socket_conn = conn
 
                 recv_buffer = ""
 
@@ -107,7 +107,7 @@ def start_socket_server(window):
                             cmd, data = decode_message(line)
                             if cmd is not None:
                                 print(f" 收到指令：{cmd}")
-                                api.queue.put((cmd, data))
+                                api._queue.put((cmd, data))
                             else:
                                 print(f"⚠️ 無法解析指令：{line}")
                         except Exception as e:
@@ -119,7 +119,7 @@ def start_socket_server(window):
                     conn.close()
                 except:
                     pass
-                api.socket_conn = None
+                api._socket_conn = None
                 print("🔌 已關閉 client，重新等待下一位")
     finally:
         print("🧹 結束時關閉 server socket")
@@ -175,12 +175,12 @@ def process_queue_data(window):
         
     def pid_data(data):
         js = f"pid_data({json.dumps(data)})"
-        api.pid_window.evaluate_js(js)
+        api._pid_window.evaluate_js(js)
         
     def course_angle(data):
         try:
             js = f"course_angle({json.dumps(data)})"
-            api.pid_window.evaluate_js(js)
+            api._pid_window.evaluate_js(js)
         except:
             print("尚未開啟PID測試頁面")
             
@@ -209,7 +209,7 @@ def process_queue_data(window):
 
     while True:
         try:
-            item = api.queue.get_nowait()
+            item = api._queue.get_nowait()
 
             if isinstance(item, tuple) and len(item) == 2:
                 cmd, data = item
